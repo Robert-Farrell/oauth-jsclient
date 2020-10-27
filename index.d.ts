@@ -1,14 +1,19 @@
-import csrf from 'csrf';
+import Tokens from 'csrf';
+// import csrf from 'csrf';
 
 declare class AuthResponse {
     constructor(params: AuthResponse.AuthResponseParams);
-    getToken(): Token;
-    text(): string;
+    processResponse(response: Response): void;
+    getToken(): Token; 
+    text(): string;    
     status(): number;
-    headers(): Object;
-    valid(): boolean;
-    getJson(): Object;
+    headers(): Object;    
+    valid(): boolean;    
+    getJson(): object; // possibly null, so object rather than Object
     get_intuit_tid(): string;
+    isContentType(): boolean;
+    getContentType(): string;
+    isJson(): boolean;
 }
 
 declare namespace AuthResponse {
@@ -16,13 +21,13 @@ declare namespace AuthResponse {
         token?: Token;
         response?: Response;
         body?: string;
-        json?: Object;
+        json?: object;
         intuit_tid?: string;
     }
 }
 
 declare class Token implements Token.TokenData {
-    latency: number;
+    
     realmId: string;
     token_type: string;
     access_token: string;
@@ -30,54 +35,62 @@ declare class Token implements Token.TokenData {
     expires_in: number;
     x_refresh_token_expires_in: number;
     id_token: string;
-    createdAt: string;
+    latency: number;
+
+    createdAt: Date; 
+
     accessToken(): string;
-    refreshToken(): string;
-    tokenType(): string;
-    getToken(): Token.TokenData;
-    setToken(tokenData: Token.TokenData): Token;
+    refreshToken(): string;    
+    tokenType(): string;    
+    getToken(): Token.TokenData; 
+
+    setToken(tokenData: Token.TokenData): Token;    
     clearToken(): Token;
+    _checkExpiry(seconds: number): boolean;
     isAccessTokenValid(): boolean;
     isRefreshTokenValid(): boolean;
 }
 
 declare namespace Token {
     export interface TokenData {
-        realmId: string;
+        realmId: string; 
         token_type: string;
         access_token: string;
         refresh_token: string;
         expires_in: number;
         x_refresh_token_expires_in: number;
-        id_token: string;
-        createdAt: string;
+        id_token: string;        
+        createdAt: Date;        
     }
 }
 
 declare class OAuthClient {
     constructor(config: OAuthClient.OAuthClientConfig);
-    authHeader(): string;
     authorizeUri(params: OAuthClient.AuthorizeParams): string;
-    createError(e: Error, authResponse?: AuthResponse): OAuthClient.OAuthClientError;
     createToken(uri: string): Promise<AuthResponse>;
-    generateOauth1Sign(params: OAuthClient.GenerateOAuth1SignParams): string;
-    getKeyFromJWKsURI(id_token: string, kid: string, request: Request): Promise<object | string>;
-    getPublicKey(modulus: string, exponent: string): string;
-    getToken(): Token;
-    getTokenRequest(request: Request): Promise<AuthResponse>;
-    getUserInfo(params?: OAuthClient.GetUserInfoParams): Promise<AuthResponse>;
-    isAccessTokenValid(): boolean;
-    loadResponse(request: Request): Promise<Response>;
-    loadResponseFromJWKsURI(request: Request): Promise<Response>;
-    log(level: string, message: string, messageData: any): void;
-    makeApiCall(params?: OAuthClient.MakeApiCallParams): Promise<AuthResponse>;
-    migrate(params: OAuthClient.MigrateParams): Promise<AuthResponse>;
     refresh(): Promise<AuthResponse>;
     refreshUsingToken(refresh_token: string): Promise<AuthResponse>;
     revoke(params?: OAuthClient.RevokeParams): Promise<AuthResponse>;
-    setToken(params: Token.TokenData): Token;
-    validateIdToken(params: OAuthClient.ValidateIdTokenParams): Promise<Response>;
+    getUserInfo(): Promise<AuthResponse>; 
+    makeApiCall(params: OAuthClient.MakeApiCallParams): Promise<AuthResponse>; 
+    validateIdToken(params?: OAuthClient.ValidateIdTokenParams ): Promise<AuthResponse>;
+    getKeyFromJWKsURI(id_token: string, kid: string, request: Request): Promise<object | string>;
+    getPublicKey(modulus: string, exponent: string): string;
+    getTokenRequest(request: Request): Promise<AuthResponse>;
     validateToken(): void;
+    loadResponse(request: Request): Promise<Response>;
+    loadResponseFromJWKsURI(request: Request): Promise<Response>;
+    createError(e: Error, authResponse?: AuthResponse): OAuthClient.OAuthClientError; 
+    isAccessTokenValid(): boolean;
+    getToken(): Token;
+    setToken(params: Token.TokenData): Token;
+    authHeader(): string;
+    log(level: string, message: string, messageData: any): void;
+
+    // Not present on OAuthClient
+    // generateOauth1Sign(params: OAuthClient.GenerateOAuth1SignParams): string; 
+    // migrate(params: OAuthClient.MigrateParams): Promise<AuthResponse>;
+    
 }
 
 declare namespace OAuthClient {
@@ -86,6 +99,7 @@ declare namespace OAuthClient {
         clientSecret: string;
         redirectUri?: string;
         environment?: string;
+        logging?: boolean;
     }
 
     export enum environment {
@@ -109,7 +123,7 @@ declare namespace OAuthClient {
 
     export interface AuthorizeParams {
         scope: scopes | scopes[] | string;
-        state?: csrf;
+        state?: Tokens | string;        
     }
 
     export interface RevokeParams {
@@ -117,24 +131,24 @@ declare namespace OAuthClient {
         refresh_token?: string;
     }
 
-    export interface GetUserInfoParams { }
+    // export interface GetUserInfoParams { }
 
     export interface MakeApiCallParams {
         url: string;
     }
 
-    export interface MigrateParams extends GenerateOAuth1SignParams {
-        scope?: scopes | scopes[] | string;
-    }
+    // export interface MigrateParams extends GenerateOAuth1SignParams {
+    //     scope?: scopes | scopes[] | string;
+    // }
 
-    export interface GenerateOAuth1SignParams {
-        oauth_consumer_key: string;
-        oauth_consumer_secret: string;
-        access_token: string;
-        access_secret: string;
-        method: 'GET' | 'POST';
-        uri: string;
-    }
+    // export interface GenerateOAuth1SignParams {
+    //     oauth_consumer_key: string;
+    //     oauth_consumer_secret: string;
+    //     access_token: string;
+    //     access_secret: string;
+    //     method: 'GET' | 'POST';
+    //     uri: string;
+    // }
 
     export interface ValidateIdTokenParams {
         id_token?: string;

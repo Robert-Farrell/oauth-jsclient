@@ -50,6 +50,7 @@ function OAuthClient(config) {
   this.clientId = config.clientId;
   this.clientSecret = config.clientSecret;
   this.redirectUri = config.redirectUri;
+  
   this.token = new Token(config.token);
   this.logging = !!(
     Object.prototype.hasOwnProperty.call(config, 'logging') && config.logging === true
@@ -66,7 +67,7 @@ function OAuthClient(config) {
       level: 'info',
       format: winston.format.combine(
         winston.format.timestamp(),
-        winston.format.printf((info) => `${info.timestamp} ${info.level}: ${info.message}`),
+        winston.format.printf((info) => `${info.timestamp} ${info.level}: ${info.message}`)
       ),
       transports: [
         new winston.transports.File({
@@ -86,7 +87,7 @@ OAuthClient.userinfo_endpoint_production =
 OAuthClient.userinfo_endpoint_sandbox =
   'https://sandbox-accounts.platform.intuit.com/v1/openid_connect/userinfo';
 OAuthClient.migrate_sandbox = 'https://developer-sandbox.api.intuit.com/v2/oauth2/tokens/migrate';
-OAuthClient.migrate_production = 'https://developer.api.intuit.com/v2/oauth2/tokens/migrate';
+OAuthClient.migrate_production = 'https://developer.api.intuit.com/v2/oauth2/tokens/validateToken';
 OAuthClient.environment = {
   sandbox: 'https://sandbox-quickbooks.api.intuit.com/',
   production: 'https://quickbooks.api.intuit.com/',
@@ -272,7 +273,7 @@ OAuthClient.prototype.refreshUsingToken = function refreshUsingToken(refresh_tok
       this.log(
         'info',
         'Refresh usingToken () response is : ',
-        JSON.stringify(authResponse, null, 2),
+        JSON.stringify(authResponse, null, 2)
       );
       return authResponse;
     })
@@ -354,7 +355,7 @@ OAuthClient.prototype.getUserInfo = function getUserInfo() {
       this.log(
         'info',
         'The Get User Info () response is : ',
-        JSON.stringify(authResponse, null, 2),
+        JSON.stringify(authResponse, null, 2)
       );
       return authResponse;
     })
@@ -383,7 +384,7 @@ OAuthClient.prototype.makeApiCall = function makeApiCall(params) {
               Accept: AuthResponse._jsonContentType,
               'User-Agent': OAuthClient.user_agent,
             },
-            params.headers,
+            params.headers
           )
         : Object.assign(
             {},
@@ -391,7 +392,7 @@ OAuthClient.prototype.makeApiCall = function makeApiCall(params) {
               Authorization: `Bearer ${this.getToken().access_token}`,
               Accept: AuthResponse._jsonContentType,
               'User-Agent': OAuthClient.user_agent,
-            },
+            }
           );
 
     const request = {
@@ -488,7 +489,7 @@ OAuthClient.prototype.getKeyFromJWKsURI = function getKeyFromJWKsURI(id_token, k
       this.log(
         'error',
         'The getKeyFromJWKsURI () threw an exception : ',
-        JSON.stringify(e, null, 2),
+        JSON.stringify(e, null, 2)
       );
       throw e;
     });
